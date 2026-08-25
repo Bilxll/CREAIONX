@@ -1,0 +1,272 @@
+// Community Platform — Core Schema (Phase 1 MVP)
+// Maps directly to spec Section 6.3 (Database Schema) and enforces the
+// principles in Section 6.4:
+//  - currency balances are NEVER mutated without a matching ledger row
+//  - reward distribution is idempotent via a unique constraint
+//  - "joined" (DB record) and "was present" (attendance_log) are separate facts
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- Users ----------
+
+model User {
+  id             String   @id @default(uuid())
+  username       String   @unique
+  email          String   @unique
+  avatarUrl      String?
+  bio            String?
+  createdAt      DateTime @default(now())
+
+  // Denormalized wallet balances — always derived from / written
+  // alongside currency_transactions in the SAME db transaction.
+  // Never update these directly from application code without a
+  // matching ledger row (see Section 6.4).
+  walletEarned   Int      @default(0) // Sparks
+  walletPurchased Int     @default(0) // Gems
+
+  // Relations
+  ownedServers      Server[]            @relation("ServerOwner")
+  memberships       ServerMember[]
+  messages          Message[]
+  eventsCreated     Event[]             @relation("EventCreator")
+  eventParticipants EventParticipant[]
+  attendanceLogs    AttendanceLog[]
+  transactions      CurrencyTransaction[]
+  inventory         UserInventoryItem[]
+  purchases         Purchase[]
+
+  @@map("users")
+}
+
+// ---------- Servers, Channels, Roles ----------
+
+model Server {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String
+  owner     User     @relation("ServerOwner", fields: [ownerId], references: [id])
+  createdAt DateTime @default(now())
+
+  channels Channel[]
+  roles    Role[]
+  members  ServerMember[]
+
+  @@map("servers")
+}
+
+enum ChannelType {
+  TEXT
+  VOICE
+}
+
+model Channel {
+  id         String      @id @default(uuid())
+  serverId   String
+  server     Server      @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  name       String
+  type       ChannelType
+  categoryId String? // nullable grouping, no Category model yet in Phase 1
+
+  messages Message[]
+
+  @@index([serverId])
+  @@map("channels")
+}
+
+model Role {
+  id          String @id @default(uuid())
+  serverId    String
+  server      Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  name        String // e.g. Owner, Admin, Member (Phase 1: fixed set)
+  color       String @default("#99AAB5")
+  permissions BigInt @default(0) // bitfield
+  position    Int    @default(0)
+
+  members ServerMember[]
+
+  @@index([serverId])
+  @@map("roles")
+}
+
+model ServerMember {
+  id       String   @id @default(uuid())
+  serverId String
+  server   Server   @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId   String?
+  role     Role?    @relation(fields: [roleId], references: [id])
+  joinedAt DateTime @default(now())
+
+  @@unique([serverId, userId])
+  @@index([userId])
+  @@map("server_members")
+}
+
+// ---------- Messaging ----------
+
+model Message {
+  id        String   @id @default(uuid())
+  channelId String
+  channel   Channel  @relation(fields: [channelId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+  editedAt  DateTime?
+
+  @@index([channelId, createdAt])
+  @@map("messages")
+}
+
+// ---------- Events (Section 4) ----------
+
+enum EventStatus {
+  DRAFT
+  SCHEDULED
+  LIVE
+  ENDED
+  REWARDS_DISTRIBUTED
+  ARCHIVED
+  CANCELLED
+}
+
+model Event {
+  id        String      @id @default(uuid())
+  name      String
+  startsAt  DateTime
+  endsAt    DateTime
+  status    EventStatus @default(DRAFT)
+  createdBy String
+  creator   User        @relation("EventCreator", fields: [createdBy], references: [id])
+
+  participants   EventParticipant[]
+  attendanceLogs AttendanceLog[]
+  storeItems     StoreItem[]
+
+  @@index([status])
+  @@map("events")
+}
+
+model EventParticipant {
+  id           String   @id @default(uuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt     DateTime @default(now())
+  rewardEarned Int      @default(0) // Sparks granted for this event, once distributed
+
+  // A DB join record does NOT imply presence — see AttendanceLog (Section 4.2/4.3)
+  @@unique([eventId, userId])
+  @@index([userId])
+  @@map("event_participants")
+}
+
+model AttendanceLog {
+  id              String   @id @default(uuid())
+  eventId         String
+  event           Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionJoinedAt DateTime
+  sessionLeftAt   DateTime?
+  source          String   // e.g. "voice_webhook", "trivia_action"
+
+  @@index([eventId, userId])
+  @@map("attendance_log")
+}
+
+// ---------- Currency Ledger (Section 3.4 / 4.4 / 6.4) ----------
+
+enum CurrencyType {
+  EARNED    // Sparks
+  PURCHASED // Gems
+}
+
+model CurrencyTransaction {
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currencyType CurrencyType
+  amount       Int          // positive = credit, negative = debit
+  reason       String       // e.g. "event_reward", "daily_login", "store_purchase", "gem_purchase"
+  refId        String       // e.g. event_id, purchase_id — used for idempotency
+  createdAt    DateTime     @default(now())
+
+  // Idempotency guard from Section 4.4: rerunning a reward batch job
+  // after a crash fails loudly (unique constraint violation) instead
+  // of double-paying.
+  @@unique([userId, refId, reason])
+  @@index([userId])
+  @@map("currency_transactions")
+}
+
+// ---------- Store & Inventory (Section 5) ----------
+
+enum StoreItemType {
+  AVATAR_FRAME
+  BANNER
+  NAME_COLOR
+  BADGE
+  EMOJI_SLOT
+  PROFILE_EFFECT
+}
+
+model StoreItem {
+  id             String        @id @default(uuid())
+  name           String
+  type           StoreItemType
+  priceEarned    Int?          // price in Sparks, nullable if not purchasable with Sparks
+  pricePurchased Int?          // price in Gems, nullable if not purchasable with Gems
+  isLimited      Boolean       @default(false)
+  eventId        String?       // set for event-exclusive items ("won at [Event Name]")
+  event          Event?        @relation(fields: [eventId], references: [id])
+
+  inventoryEntries UserInventoryItem[]
+
+  @@map("store_items")
+}
+
+model UserInventoryItem {
+  id         String    @id @default(uuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId     String
+  item       StoreItem @relation(fields: [itemId], references: [id])
+  acquiredAt DateTime  @default(now())
+  equipped   Boolean   @default(false)
+
+  @@unique([userId, itemId])
+  @@index([userId])
+  @@map("user_inventory")
+}
+
+// ---------- Payments (Phase 2, scaffolded now) ----------
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  REFUNDED
+  FAILED
+}
+
+model Purchase {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id])
+  amountUsd       Int            // cents
+  currencyGranted Int            // Gems granted
+  stripePaymentId String?        @unique
+  status          PurchaseStatus @default(PENDING)
+  createdAt       DateTime       @default(now())
+
+  @@map("purchases")
+}
