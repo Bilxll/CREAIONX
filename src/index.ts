@@ -10,6 +10,14 @@ import path from "path";
 
 export const prisma = new PrismaClient();
 
+// Prisma's `permissions` bitfields are BigInt, and JSON.stringify can't
+// serialize BigInt natively. Rather than fix this per-route, teach BigInt
+// how to convert to JSON once, globally, as a string. Every route that
+// returns a role (with its `permissions` field) is now safe automatically.
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 const app = express();
 app.use(cors());
 // Content-Security-Policy relaxed only for this local test page's needs;
