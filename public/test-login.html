@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Community Platform — Auth Test</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 60px auto; padding: 0 20px; background: #111; color: #eee; }
+  h1 { font-size: 20px; }
+  input { display: block; width: 100%; padding: 8px; margin: 6px 0 14px; box-sizing: border-box; }
+  button { padding: 8px 16px; margin-right: 8px; margin-bottom: 10px; cursor: pointer; }
+  pre { background: #222; padding: 12px; border-radius: 6px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; }
+  .row { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+  <h1>Community Platform — Auth Test Page</h1>
+  <p>This is a throwaway test page, not the real app UI. It just proves Supabase Auth -> our backend works end-to-end.</p>
+
+  <div class="row">
+    <label>Email</label>
+    <input id="email" type="email" placeholder="you@example.com" />
+    <label>Password</label>
+    <input id="password" type="password" placeholder="At least 6 characters" />
+  </div>
+
+  <div class="row">
+    <button id="signupBtn">Sign Up</button>
+    <button id="loginBtn">Log In</button>
+    <button id="logoutBtn">Log Out</button>
+  </div>
+
+  <div class="row">
+    <button id="whoamiBtn">Call /auth/whoami</button>
+    <button id="meBtn">Call /auth/me</button>
+  </div>
+
+  <h2>Servers</h2>
+  <div class="row">
+    <label>New server name</label>
+    <input id="serverName" type="text" placeholder="My Community" />
+    <button id="createServerBtn">Create Server</button>
+    <button id="listServersBtn">List My Servers</button>
+  </div>
+
+  <div class="row">
+    <label>Server ID (paste from a create/list result above)</label>
+    <input id="serverId" type="text" placeholder="server-uuid-here" />
+    <button id="joinServerBtn">Join Server</button>
+    <button id="listChannelsBtn">List Channels</button>
+  </div>
+
+  <div class="row">
+    <label>New channel name</label>
+    <input id="channelName" type="text" placeholder="general" />
+    <button id="createChannelTextBtn">Create TEXT Channel</button>
+    <button id="createChannelVoiceBtn">Create VOICE Channel</button>
+  </div>
+
+  <h3>Output</h3>
+  <pre id="output">(nothing yet)</pre>
+
+  <script src="/vendor/supabase.min.js"></script>
+  <script src="/test-login.js"></script>
+</body>
+</html>
