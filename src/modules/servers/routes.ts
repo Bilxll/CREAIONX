@@ -38,7 +38,7 @@ router.post("/", requireAuth, async (req: AuthedRequest, res: Response) => {
     include: { roles: true, channels: true },
   });
 
-  const ownerRole = server.roles.find((r) => r.name === "Owner");
+  const ownerRole = server.roles.find((r: { name: string }) => r.name === "Owner");
 
   await prisma.serverMember.create({
     data: {
@@ -66,7 +66,7 @@ router.get("/", requireAuth, async (req: AuthedRequest, res: Response) => {
     include: { server: true },
   });
 
-  res.json({ servers: memberships.map((m) => m.server) });
+  res.json({ servers: memberships.map((m: { server: unknown }) => m.server) });
 });
 
 /**
@@ -128,7 +128,7 @@ router.post("/:id/join", requireAuth, async (req: AuthedRequest, res: Response) 
     return res.json({ membership: existing, note: "Already a member" });
   }
 
-  const memberRole = server.roles.find((r) => r.name === "Member");
+  const memberRole = server.roles.find((r: { name: string }) => r.name === "Member");
 
   const membership = await prisma.serverMember.create({
     data: { serverId, userId, roleId: memberRole?.id },
