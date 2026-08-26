@@ -56,10 +56,24 @@
     <button id="createChannelVoiceBtn">Create VOICE Channel</button>
   </div>
 
+  <h2>Chat</h2>
+  <div class="row">
+    <label>Channel ID to chat in (copy from List Channels output)</label>
+    <input id="chatChannelId" type="text" placeholder="channel-uuid-here" />
+    <button id="connectSocketBtn">Connect</button>
+    <button id="joinChannelBtn">Join Channel</button>
+    <button id="loadHistoryBtn">Load History</button>
+  </div>
+  <div id="chatBox" style="background:#1a1a1a; border-radius:6px; padding:10px; height:220px; overflow-y:auto; margin-bottom:10px;"></div>
+  <div class="row">
+    <input id="chatInput" type="text" placeholder="Type a message and press Enter" />
+  </div>
+
   <h3>Output</h3>
   <pre id="output">(nothing yet)</pre>
 
   <script src="/vendor/supabase.min.js"></script>
+  <script src="/vendor/socket.io.min.js"></script>
   <script src="/test-login.js"></script>
 </body>
 </html>

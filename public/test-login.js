@@ -86,3 +86,70 @@ document.getElementById("createChannelVoiceBtn").onclick = () => {
   const name = document.getElementById("channelName").value;
   callBackend(`/servers/${serverId}/channels`, { method: "POST", body: { name, type: "VOICE" } });
 };
+
+// ---------------- Chat ----------------
+
+let sock = null;
+let currentChannelId = null;
+
+function appendChatLine(msg) {
+  const box = document.getElementById("chatBox");
+  const line = document.createElement("div");
+  const time = new Date(msg.createdAt || Date.now()).toLocaleTimeString();
+  const username = msg.user?.username || "unknown";
+  line.textContent = `[${time}] ${username}: ${msg.content}`;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+}
+
+document.getElementById("connectSocketBtn").onclick = async () => {
+  const { data: sessionData } = await sb.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) {
+    out("Not logged in — log in first.");
+    return;
+  }
+  if (sock) {
+    sock.disconnect();
+  }
+  sock = io(API_BASE || undefined, { auth: { token } });
+
+  sock.on("connect", () => out("Socket connected: " + sock.id));
+  sock.on("connect_error", (err) => out({ socketError: err.message }));
+  sock.on("channel:message", (msg) => {
+    if (msg.channelId === currentChannelId) appendChatLine(msg);
+  });
+};
+
+document.getElementById("joinChannelBtn").onclick = () => {
+  if (!sock) {
+    out("Connect the socket first.");
+    return;
+  }
+  const channelId = document.getElementById("chatChannelId").value;
+  currentChannelId = channelId;
+  sock.emit("channel:join", channelId, (res) => out(res));
+};
+
+document.getElementById("loadHistoryBtn").onclick = async () => {
+  const channelId = document.getElementById("chatChannelId").value;
+  const json = await callBackend(`/channels/${channelId}/messages`);
+  if (json?.messages) {
+    document.getElementById("chatBox").innerHTML = "";
+    json.messages.forEach(appendChatLine);
+  }
+};
+
+document.getElementById("chatInput").addEventListener("keydown", (e) => {
+  if (e.key !== "Enter") return;
+  if (!sock || !currentChannelId) {
+    out("Connect and join a channel first.");
+    return;
+  }
+  const content = e.target.value;
+  if (!content.trim()) return;
+  sock.emit("message:send", { channelId: currentChannelId, content }, (res) => {
+    if (res?.error) out(res);
+  });
+  e.target.value = "";
+});
