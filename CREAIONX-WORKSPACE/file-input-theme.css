@@ -150,11 +150,23 @@ input[type="checkbox"]:checked {
 input[type="checkbox"]:checked::before { transform: scale(1); }
 input[type="checkbox"]:focus-visible { box-shadow: 0 0 0 4px rgba(204,255,0,.09); }
 
-/* Fix custom dropdown stacking: opened menus must sit above later fields. */
+/* Custom dropdown stacking.
+   .dash-card uses backdrop-filter, which creates a stacking context. The whole
+   card containing an open select therefore has to be raised above sibling cards. */
 .field { position: relative; }
 .field .cx-select { isolation: auto !important; }
 .field .cx-select.open { z-index: 2147483000 !important; }
 .field:has(.cx-select.open) { z-index: 2147483000; }
+
+.dashboard-grid { isolation: isolate; }
+.dashboard-grid > .dash-card {
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+.dashboard-grid > .dash-card:has(.cx-select.open) {
+  z-index: 2147482000 !important;
+}
 
 .field .cx-select-menu {
   background: #080808 !important;
