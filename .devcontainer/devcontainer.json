@@ -1,0 +1,11 @@
+{
+  "name": "CREAIONX Codespace",
+  "forwardPorts": [5500],
+  "portsAttributes": {
+    "5500": {
+      "label": "CREAIONX WORKSPACE Preview",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postStartCommand": "bash /workspaces/CREAIONX/CREAIONX-WORKSPACE/start-preview.sh 5500"
+}
