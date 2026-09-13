@@ -1,0 +1,60 @@
+/* CREAIONX WORKSPACE — final production/responsive safeguards */
+
+:focus-visible{
+  outline:2px solid var(--lime,#ccff00);
+  outline-offset:3px;
+}
+
+img,svg,video,canvas{max-width:100%}
+input,select,textarea,button{max-width:100%}
+
+.portal-content,.dashboard-grid,.dash-card,.login-card,.lookup,.leaderboard-board{min-width:0}
+.table{width:100%;border-collapse:collapse}
+.table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* Keep portal headers usable on narrow screens. */
+@media(max-width:760px){
+  .portal-page{padding:8px}
+  .portal-shell{min-height:calc(100vh - 16px);border-radius:24px}
+  .portal-nav{padding:16px;gap:14px;align-items:center}
+  .portal-nav .brand{min-width:0}
+  .portal-nav .brand span{font-size:11px;line-height:1.2;white-space:normal}
+  .portal-nav .status{font-size:8px;white-space:nowrap}
+  .portal-content{padding:24px 16px}
+  .login-wrap{min-height:calc(100vh - 140px);padding:30px 0}
+  .login-card{padding:24px;border-radius:24px}
+  .login-card h1{font-size:clamp(38px,11vw,52px)}
+  .section-head{align-items:flex-start;flex-direction:column;gap:18px}
+  .section-head h2{font-size:clamp(38px,11vw,56px)!important}
+
+  .dashboard-grid{grid-template-columns:1fr;gap:12px}
+  .dashboard-grid > [class*="span-"]{grid-column:1/-1!important}
+  .dash-card{padding:20px;border-radius:23px}
+
+  .table{min-width:540px}
+  .btn{min-height:46px}
+}
+
+@media(max-width:520px){
+  .portal-nav{align-items:flex-start;flex-direction:column}
+  .portal-nav .status{align-self:flex-start}
+  .portal-content{padding:20px 12px}
+  .dash-card{padding:18px;border-radius:21px}
+  .field input,.field select,.field textarea{font-size:16px}
+
+  form[style*="display:flex"]{flex-direction:column}
+  form[style*="display:flex"] .btn{width:100%}
+}
+
+/* Prevent long identities/status values from breaking cards. */
+#generatedCandidateId,
+.metric-value,
+.dash-card h3,
+.employee-idblock span,
+.leaderboard-person strong,
+.leaderboard-person span{
+  overflow-wrap:anywhere;
+}
+
+/* Stable hidden-state behavior across browsers. */
+[hidden]{display:none!important}
