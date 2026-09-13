@@ -1,4 +1,4 @@
-/* CREAIONX WORKSPACE — themed file upload controls */
+/* CREAIONX WORKSPACE — themed form controls */
 input[type="file"] {
   width: 100%;
   min-height: 56px;
@@ -66,31 +66,95 @@ input[type="file"]::-webkit-file-upload-button {
   cursor: pointer;
 }
 
-input[type="file"]::-webkit-file-upload-button:hover {
-  background: #d8ff33;
+input[type="file"]::-webkit-file-upload-button:hover { background: #d8ff33; }
+input[type="file"]:disabled { opacity: .48; cursor: not-allowed; }
+
+/* Textareas — used by training submissions and management-style notes. */
+.field textarea,
+textarea.trainingNotes,
+textarea.reviewFeedback {
+  width: 100%;
+  min-height: 108px;
+  resize: vertical;
+  padding: 15px 16px;
+  border-radius: 15px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.04);
+  color: #ebebeb;
+  caret-color: #ccff00;
+  outline: none;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
 }
 
-input[type="file"]:disabled {
-  opacity: .48;
-  cursor: not-allowed;
+.field textarea::placeholder,
+textarea.trainingNotes::placeholder,
+textarea.reviewFeedback::placeholder { color: rgba(235,235,235,.34); }
+
+.field textarea:hover,
+textarea.trainingNotes:hover,
+textarea.reviewFeedback:hover { border-color: rgba(204,255,0,.25); }
+
+.field textarea:focus,
+textarea.trainingNotes:focus,
+textarea.reviewFeedback:focus {
+  border-color: rgba(204,255,0,.72);
+  background: rgba(204,255,0,.035);
+  box-shadow: 0 0 0 4px rgba(204,255,0,.055), 0 0 28px rgba(204,255,0,.06);
 }
+
+/* Date field should stay visually inside the dark system theme. */
+input[type="date"] { color-scheme: dark; }
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(88%) sepia(99%) saturate(1200%) hue-rotate(22deg) brightness(103%);
+  cursor: pointer;
+  opacity: .88;
+}
+
+/* CREAIONX checkboxes instead of default browser boxes. */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 0 0 auto;
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: #111;
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  outline: none;
+  transition: .18s ease;
+}
+
+input[type="checkbox"]::before {
+  content: "✓";
+  color: #000;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1;
+  transform: scale(0);
+  transition: transform .14s ease;
+}
+
+input[type="checkbox"]:hover { border-color: rgba(204,255,0,.58); }
+input[type="checkbox"]:checked {
+  background: #ccff00;
+  border-color: #ccff00;
+  box-shadow: 0 0 20px rgba(204,255,0,.18);
+}
+input[type="checkbox"]:checked::before { transform: scale(1); }
+input[type="checkbox"]:focus-visible { box-shadow: 0 0 0 4px rgba(204,255,0,.09); }
 
 /* Fix custom dropdown stacking: opened menus must sit above later fields. */
-.field {
-  position: relative;
-}
-
-.field .cx-select {
-  isolation: auto !important;
-}
-
-.field .cx-select.open {
-  z-index: 2147483000 !important;
-}
-
-.field:has(.cx-select.open) {
-  z-index: 2147483000;
-}
+.field { position: relative; }
+.field .cx-select { isolation: auto !important; }
+.field .cx-select.open { z-index: 2147483000 !important; }
+.field:has(.cx-select.open) { z-index: 2147483000; }
 
 .field .cx-select-menu {
   background: #080808 !important;
@@ -100,29 +164,40 @@ input[type="file"]:disabled {
   box-shadow: 0 24px 70px rgba(0,0,0,.88), 0 0 0 1px rgba(204,255,0,.16) inset, 0 0 38px rgba(204,255,0,.08) !important;
 }
 
-.field .cx-select-option {
-  background: #080808;
-}
-
+.field .cx-select-option { background: #080808; }
 .field .cx-select-option:hover,
-.field .cx-select-option.keyboard-active {
-  background: #151515 !important;
-}
+.field .cx-select-option.keyboard-active { background: #151515 !important; }
+.field .cx-select-option.selected { background: #ccff00 !important; color: #000 !important; }
 
-.field .cx-select-option.selected {
-  background: #ccff00 !important;
-  color: #000 !important;
-}
-
-@media (max-width: 640px) {
-  input[type="file"] {
-    min-height: 52px;
-    font-size: 13px;
+/* Application page responsive polish. Inline two-column groups collapse cleanly on phones. */
+@media (max-width: 700px) {
+  #applicationForm .dash-card > div[style*="grid-template-columns:1fr 1fr"] {
+    grid-template-columns: 1fr !important;
   }
 
+  #applicationForm .dash-card { padding: 20px; }
+
+  #applicationForm .span-12[style*="justify-content:space-between"] {
+    align-items: stretch !important;
+  }
+
+  #applicationForm .span-12[style*="justify-content:space-between"] .btn {
+    width: 100%;
+  }
+
+  #applicationSuccess { padding: 12px !important; }
+  #applicationSuccess > div > div:nth-child(2) > div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  #applicationSuccess h1 { font-size: clamp(46px, 15vw, 72px) !important; }
+  #applicationSuccess .dash-card { min-height: auto !important; }
+
+  input[type="file"] { min-height: 52px; font-size: 13px; }
   input[type="file"]::file-selector-button,
-  input[type="file"]::-webkit-file-upload-button {
-    min-height: 52px;
-    padding: 0 16px;
-  }
+  input[type="file"]::-webkit-file-upload-button { min-height: 52px; padding: 0 16px; }
+
+  .field textarea,
+  textarea.trainingNotes,
+  textarea.reviewFeedback { min-height: 96px; font-size: 16px; }
 }
