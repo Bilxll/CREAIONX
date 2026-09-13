@@ -11,7 +11,7 @@ const CX = {
 };
 
 function doGet() {
-  return json_({ ok: true, service: 'CREAIONX WORKSPACE API', version: '1.1.0', time: now_() });
+  return json_({ ok: true, service: 'CREAIONX WORKSPACE API', version: '1.2.0', time: now_() });
 }
 
 function doPost(e) {
@@ -28,6 +28,7 @@ function doPost(e) {
       getCandidateTraining: () => getCandidateTraining_(data.candidateId),
       submitTraining: () => submitTraining_(data),
       getEmployee: () => getEmployeePublic_(data.employeeId),
+      getLeaderboard: () => getLeaderboardPublic_(),
       managerLogin: () => managerLogin_(data.managementId, data.password),
       managerLogout: () => managerLogout_(token),
       changeManagerPassword: () => changeManagerPassword_(token, data.newPassword),
