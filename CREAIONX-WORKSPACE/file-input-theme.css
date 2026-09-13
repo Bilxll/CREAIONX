@@ -181,6 +181,170 @@ input[type="checkbox"]:focus-visible { box-shadow: 0 0 0 4px rgba(204,255,0,.09)
 .field .cx-select-option.keyboard-active { background: #151515 !important; }
 .field .cx-select-option.selected { background: #ccff00 !important; color: #000 !important; }
 
+/* Candidate Portal — production polish. */
+#candidateLookup {
+  position: relative;
+  overflow: hidden;
+}
+#candidateLookup::after {
+  content: "CXW";
+  position: absolute;
+  right: -12px;
+  bottom: -36px;
+  font: 700 112px/1 'JetBrains Mono', monospace;
+  letter-spacing: -.08em;
+  color: rgba(204,255,0,.035);
+  pointer-events: none;
+}
+#candidateLookup > * { position: relative; z-index: 1; }
+
+#candidateDash .section-head { align-items: center; }
+#candidateDash .dashboard-grid > .dash-card { min-width: 0; }
+#candidateDash .dashboard-grid > .dash-card.candidate-summary-card {
+  background: linear-gradient(180deg,rgba(255,255,255,.042),rgba(255,255,255,.024));
+}
+#candidateDash .candidate-status-card {
+  background: radial-gradient(circle at 100% 0,rgba(204,255,0,.07),transparent 42%),rgba(255,255,255,.025);
+}
+#candidateDash .candidate-status-card h3 { text-transform: none; }
+
+.timeline-item.pending { opacity: .48; }
+.timeline-item.pending .timeline-dot {
+  border-color: rgba(255,255,255,.18);
+  box-shadow: none;
+}
+.timeline-item.pending h4,
+.timeline-item.pending p { color: rgba(235,235,235,.52); }
+.timeline-item.active:not(.done) .timeline-dot {
+  background: rgba(204,255,0,.06);
+  border-color: #ccff00;
+  box-shadow: 0 0 22px rgba(204,255,0,.2);
+}
+.timeline-item.active:not(.done) h4 { color: #fff; }
+
+.candidate-action-panel {
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid rgba(204,255,0,.2);
+  border-radius: 18px;
+  background: linear-gradient(145deg,rgba(204,255,0,.075),rgba(204,255,0,.025));
+}
+.candidate-action-panel .action-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+.candidate-action-panel .action-copy {
+  color: rgba(235,235,235,.62);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0 0 14px;
+}
+.candidate-action-panel .action-buttons {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.candidate-toast {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 2147483647;
+  width: min(390px,calc(100vw - 28px));
+  padding: 15px 17px;
+  border-radius: 16px;
+  border: 1px solid rgba(204,255,0,.28);
+  background: #0b0b0b;
+  color: #ebebeb;
+  box-shadow: 0 24px 70px rgba(0,0,0,.75),0 0 28px rgba(204,255,0,.08);
+  font-size: 13px;
+  line-height: 1.5;
+  transform: translateY(18px);
+  opacity: 0;
+  transition: .22s ease;
+}
+.candidate-toast.show { transform: translateY(0); opacity: 1; }
+.candidate-toast.error { border-color: rgba(255,95,95,.36); }
+
+.candidate-training-panel {
+  margin-top: 20px;
+  padding: clamp(20px,3vw,30px);
+  border-radius: 28px;
+  background: radial-gradient(circle at 100% 0,rgba(204,255,0,.055),transparent 32%),rgba(255,255,255,.025);
+}
+.training-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 18px;
+  margin: 8px 0 22px;
+}
+.training-panel-head p { color: var(--muted); margin: 7px 0 0; line-height: 1.55; }
+.training-module-list { display: grid; gap: 14px; }
+.training-module-card {
+  position: relative;
+  padding: 20px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 20px;
+  background: #111;
+  overflow: hidden;
+  transition: border-color .2s ease, transform .2s ease, background .2s ease;
+}
+.training-module-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: rgba(255,255,255,.12);
+}
+.training-module-card.status-submitted::before { background: #ccff00; }
+.training-module-card.status-completed::before { background: #10b981; }
+.training-module-card.status-revision_required::before { background: #ffb347; }
+.training-module-card:hover { border-color: rgba(204,255,0,.22); }
+.training-module-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.training-module-card h4 { font-size: 21px; margin: 7px 0 0; letter-spacing: -.025em; }
+.training-module-copy { color: var(--muted); line-height: 1.65; margin: 15px 0 0; max-width: 980px; }
+.training-feedback {
+  margin-top: 14px;
+  padding: 14px 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(204,255,0,.15);
+  background: rgba(204,255,0,.045);
+  color: rgba(235,235,235,.78);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.training-score { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.training-submit-state {
+  margin-top: 14px;
+  padding: 14px 15px;
+  border-radius: 14px;
+  background: rgba(204,255,0,.055);
+  border: 1px solid rgba(204,255,0,.16);
+  font-size: 13px;
+  color: rgba(235,235,235,.78);
+}
+.trainingSubmitForm { margin-top: 18px; display: grid; gap: 2px; }
+.trainingSubmitForm .btn { margin-top: 12px; width: fit-content; }
+.candidate-loading-state,
+.candidate-empty-state {
+  margin-top: 14px;
+  padding: 18px;
+  border-radius: 16px;
+  border: 1px dashed rgba(255,255,255,.14);
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 /* Application page responsive polish. Inline two-column groups collapse cleanly on phones. */
 @media (max-width: 700px) {
   #applicationForm .dash-card > div[style*="grid-template-columns:1fr 1fr"] {
@@ -212,4 +376,17 @@ input[type="checkbox"]:focus-visible { box-shadow: 0 0 0 4px rgba(204,255,0,.09)
   .field textarea,
   textarea.trainingNotes,
   textarea.reviewFeedback { min-height: 96px; font-size: 16px; }
+
+  #candidateDash .section-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  #candidateDash .section-head h2 { font-size: 44px !important; }
+  #candidateDash .section-head .btn { width: 100%; }
+  .candidate-action-panel .action-buttons { flex-direction: column; }
+  .candidate-action-panel .action-buttons .btn { width: 100%; }
+  .training-panel-head { align-items: flex-start; flex-direction: column; }
+  .trainingSubmitForm .btn { width: 100%; }
+  .training-module-card { padding: 17px; }
+  .candidate-toast { right: 14px; bottom: 14px; }
 }
