@@ -12,6 +12,27 @@
     return s === 'COMPLETED' ? 'green' : '';
   }
 
+  function statusSlug(v) {
+    return String(v || 'ASSIGNED').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+  }
+
+  function pretty(v) {
+    return String(v || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function trainingToast(message, type = 'success') {
+    document.querySelector('.candidate-toast')?.remove();
+    const node = document.createElement('div');
+    node.className = `candidate-toast${type === 'error' ? ' error' : ''}`;
+    node.textContent = message;
+    document.body.appendChild(node);
+    requestAnimationFrame(() => node.classList.add('show'));
+    setTimeout(() => {
+      node.classList.remove('show');
+      setTimeout(() => node.remove(), 260);
+    }, 2800);
+  }
+
   async function renderCandidateTraining(candidate) {
     if (String(candidate['Field Decision'] || '').toUpperCase() !== 'ACCEPTED') return;
     const dash = document.getElementById('candidateDash');
@@ -21,47 +42,50 @@
     if (!host) {
       host = document.createElement('section');
       host.id = 'candidateTrainingPanel';
-      host.className = 'dash-card';
-      host.style.marginTop = '20px';
+      host.className = 'dash-card candidate-training-panel';
       dash.appendChild(host);
     }
 
-    host.innerHTML = '<div class="kicker">Training</div><h3>Loading your modules…</h3>';
+    host.innerHTML = '<div class="kicker">Training</div><div class="candidate-loading-state">Loading your required modules…</div>';
     try {
       const out = await api('getCandidateTraining', { candidateId: candidate['Candidate ID'] });
       const modules = out.modules || [];
       host.innerHTML = `
         <div class="kicker">${esc(out.field)} training</div>
-        <div class="section-head" style="margin:8px 0 22px;align-items:flex-end">
-          <div><h3 style="margin:0">Required modules</h3><p style="color:var(--muted);margin:8px 0 0">Complete all modules before final evaluation unlocks.</p></div>
+        <div class="training-panel-head">
+          <div><h3 style="margin:0">Required modules</h3><p>Complete all assigned modules before final evaluation unlocks.</p></div>
           <div class="pill ${out.progress >= 100 ? 'green' : ''}">${esc(out.progress)}% complete</div>
         </div>
         <div class="meter" style="margin-bottom:22px"><span style="width:${pct(out.progress)}%"></span></div>
-        <div id="trainingModuleList" style="display:grid;gap:14px"></div>`;
+        <div id="trainingModuleList" class="training-module-list"></div>`;
 
       const list = host.querySelector('#trainingModuleList');
+      if (!modules.length) {
+        list.innerHTML = '<div class="candidate-empty-state">No modules are assigned yet. Your training plan will appear here when CREAIONX activates it.</div>';
+        return;
+      }
+
       modules.forEach((m, index) => {
         const status = String(m['Status'] || 'ASSIGNED').toUpperCase();
         const card = document.createElement('div');
-        card.className = 'notice';
-        card.style.margin = '0';
+        card.className = `training-module-card status-${statusSlug(status)}`;
         card.innerHTML = `
-          <div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap">
+          <div class="training-module-top">
             <div>
               <div class="kicker">Module ${String(index + 1).padStart(2,'0')} / ${esc(m['Module ID'])}</div>
-              <h4 style="font-size:20px;margin:7px 0">${esc(m['Module Name'])}</h4>
+              <h4>${esc(m['Module Name'])}</h4>
             </div>
-            <span class="pill ${moduleStatusClass(status)}">${esc(status)}</span>
+            <span class="pill ${moduleStatusClass(status)}">${esc(pretty(status))}</span>
           </div>
-          <p style="color:var(--muted);line-height:1.65">${esc(instructions[m['Module ID']] || 'Complete the assigned practical exercise and submit your work for trainer review.')}</p>
-          ${m['Feedback'] ? `<div class="notice" style="margin:12px 0 0"><b>Trainer feedback:</b> ${esc(m['Feedback'])}</div>` : ''}
-          ${status === 'COMPLETED' ? `<div style="margin-top:12px"><b>Score:</b> ${esc(m['Score'] || '—')} / 100</div>` : ''}
+          <p class="training-module-copy">${esc(instructions[m['Module ID']] || 'Complete the assigned practical exercise and submit your work for trainer review.')}</p>
+          ${m['Feedback'] ? `<div class="training-feedback"><b>Trainer feedback:</b> ${esc(m['Feedback'])}</div>` : ''}
+          ${status === 'COMPLETED' ? `<div class="training-score"><b>Score:</b> ${esc(m['Score'] || '—')} / 100</div>` : ''}
           ${status !== 'COMPLETED' && status !== 'SUBMITTED' ? `
-            <form class="trainingSubmitForm" data-record-id="${esc(m['Training Record ID'])}" style="margin-top:16px">
+            <form class="trainingSubmitForm" data-record-id="${esc(m['Training Record ID'])}">
               <div class="field"><label>Submission notes <span style="opacity:.55">(optional)</span></label><textarea class="trainingNotes" rows="3" placeholder="Briefly explain what you created or include any relevant context."></textarea></div>
               <div class="field"><label>Upload practical work</label><input class="trainingFile" type="file" accept=".png,.jpg,.jpeg,.pdf,.zip" required></div>
               <button class="btn btn-lime" type="submit">Submit module ↗</button>
-            </form>` : status === 'SUBMITTED' ? `<div class="notice" style="margin-top:14px"><b>Submitted for review.</b> Your trainer will score this module or request a revision.</div>` : ''}`;
+            </form>` : status === 'SUBMITTED' ? `<div class="training-submit-state"><b>Submitted for review.</b> Your trainer will score this module or request a revision.</div>` : ''}`;
         list.appendChild(card);
       });
 
@@ -78,17 +102,17 @@
               notes: form.querySelector('.trainingNotes').value,
               submission
             });
-            alert('Training module submitted for review.');
+            trainingToast('Module submitted successfully. It is now waiting for trainer review.');
             await renderCandidateTraining(candidate);
           } catch (err) {
-            showError(err);
+            trainingToast(err?.message || String(err), 'error');
           } finally {
             setBusy(btn, false);
           }
         });
       });
     } catch (err) {
-      host.innerHTML = `<div class="kicker">Training</div><div class="notice">${esc(err.message || err)}</div>`;
+      host.innerHTML = `<div class="kicker">Training</div><div class="candidate-empty-state">${esc(err.message || err)}</div>`;
     }
   }
 
@@ -127,7 +151,7 @@
         card.innerHTML = `
           <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap">
             <div><b>${esc(m['Module ID'])} · ${esc(m['Module Name'])}</b></div>
-            <span class="pill ${moduleStatusClass(status)}">${esc(status)}</span>
+            <span class="pill ${moduleStatusClass(status)}">${esc(pretty(status))}</span>
           </div>
           ${m['Submission URL'] ? `<p style="margin:12px 0"><a class="btn btn-ghost" href="${esc(m['Submission URL'])}" target="_blank" rel="noopener">Open submission ↗</a></p>` : '<p style="color:var(--muted)">No submission uploaded yet.</p>'}
           ${m['Submission Notes'] ? `<p style="color:var(--muted);line-height:1.55"><b>Candidate notes:</b> ${esc(m['Submission Notes'])}</p>` : ''}
