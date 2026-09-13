@@ -1,0 +1,233 @@
+/* CREAIONX WORKSPACE — Management Portal production UI */
+
+.mgmt-shell-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:24px;
+  margin-bottom:30px;
+}
+.mgmt-shell-head h2{
+  margin:8px 0 0;
+  font-size:clamp(44px,5vw,68px);
+  line-height:.95;
+  letter-spacing:-.055em;
+}
+.mgmt-shell-meta{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:16px}
+.mgmt-role-chip,.mgmt-scope-chip{
+  display:inline-flex;
+  align-items:center;
+  min-height:31px;
+  padding:7px 11px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.035);
+  color:var(--muted);
+  font:600 9px 'JetBrains Mono',monospace;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.mgmt-role-chip{border-color:rgba(204,255,0,.28);background:rgba(204,255,0,.055);color:var(--lime)}
+
+.mgmt-stat-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;
+  margin-bottom:16px;
+}
+.mgmt-stat-card{
+  min-height:148px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  position:relative;
+  overflow:hidden;
+}
+.mgmt-stat-card:after{
+  content:"";
+  position:absolute;
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  right:-45px;
+  top:-45px;
+  background:rgba(204,255,0,.045);
+  filter:blur(2px);
+}
+.mgmt-stat-value{
+  margin-top:18px;
+  font-size:clamp(38px,4vw,58px);
+  line-height:1;
+  font-weight:600;
+  letter-spacing:-.055em;
+}
+.mgmt-stat-note{font-size:12px;color:var(--muted);line-height:1.5}
+
+.mgmt-workbench-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:16px;
+  align-items:start;
+}
+.mgmt-workbench{padding:0;overflow:visible}
+.mgmt-workbench-head{
+  padding:24px 24px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+}
+.mgmt-workbench-title h3{margin:7px 0 6px;font-size:27px}
+.mgmt-workbench-title p{margin:0;color:var(--muted);font-size:13px;line-height:1.55;max-width:470px}
+.mgmt-workbench-icon{
+  width:43px;
+  height:43px;
+  flex:0 0 43px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  background:rgba(204,255,0,.075);
+  border:1px solid rgba(204,255,0,.18);
+  color:var(--lime);
+  font:700 11px 'JetBrains Mono',monospace;
+}
+.mgmt-search{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  padding:20px 24px;
+  border-bottom:1px solid var(--border);
+}
+.mgmt-search input{
+  width:100%;
+  min-width:0;
+  border:1px solid var(--border);
+  border-radius:999px;
+  padding:14px 18px;
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  outline:none;
+  font:600 13px 'JetBrains Mono',monospace;
+  text-transform:uppercase;
+}
+.mgmt-search input:focus{
+  border-color:rgba(204,255,0,.65);
+  box-shadow:0 0 0 4px rgba(204,255,0,.06);
+}
+.mgmt-editor{padding:24px;min-height:250px}
+.mgmt-empty-state{
+  min-height:200px;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  border:1px dashed rgba(255,255,255,.1);
+  border-radius:20px;
+  padding:26px;
+  color:var(--muted);
+}
+.mgmt-empty-state strong{display:block;color:var(--text);font-size:16px;margin-bottom:6px}
+.mgmt-empty-state span{font-size:12px;line-height:1.55}
+
+/* Editors emitted by the existing app.js stay functionally unchanged. */
+.mgmt-editor > .notice:first-child{
+  margin:0 0 18px;
+  border-color:rgba(204,255,0,.2);
+  background:rgba(204,255,0,.045);
+  color:var(--text);
+  font-weight:600;
+}
+.mgmt-editor .field{margin-top:13px}
+.mgmt-editor .field label{
+  display:block;
+  margin-bottom:7px;
+  font:500 9px 'JetBrains Mono',monospace;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--faint);
+}
+.mgmt-editor .field input,
+.mgmt-editor .field textarea,
+.mgmt-editor .field select{
+  width:100%;
+  min-height:48px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px 14px;
+  background:rgba(255,255,255,.035);
+  color:var(--text);
+  outline:none;
+}
+.mgmt-editor .field textarea{min-height:100px;resize:vertical}
+.mgmt-editor .field input:focus,
+.mgmt-editor .field textarea:focus,
+.mgmt-editor .field select:focus{
+  border-color:rgba(204,255,0,.6);
+  box-shadow:0 0 0 4px rgba(204,255,0,.055);
+}
+.mgmt-editor > div[style*="display:flex"]{margin-top:18px!important}
+.mgmt-editor .btn{min-height:43px}
+
+/* Training reviewer inserted by training-ui.js */
+#managerTrainingPanel{
+  margin-top:26px!important;
+  padding-top:22px;
+  border-top:1px solid var(--border);
+}
+#managerTrainingPanel > h3{font-size:23px;margin-bottom:16px!important}
+#managerTrainingList{gap:12px!important}
+#managerTrainingList > .notice{
+  padding:18px;
+  border-radius:18px;
+  background:#101010;
+  border:1px solid rgba(255,255,255,.09);
+}
+#managerTrainingList .btn{font-size:12px}
+#managerTrainingList a.btn{display:inline-flex}
+
+.mgmt-security-strip{
+  margin-top:16px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  background:linear-gradient(90deg,rgba(204,255,0,.055),rgba(255,255,255,.02));
+}
+.mgmt-security-strip p{margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.55;max-width:790px}
+.mgmt-security-badge{
+  flex:0 0 auto;
+  padding:9px 12px;
+  border:1px solid rgba(204,255,0,.2);
+  border-radius:999px;
+  color:var(--lime);
+  font:600 9px 'JetBrains Mono',monospace;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+/* First-login password screen */
+#pwChange.login-card{border:1px solid rgba(204,255,0,.15)}
+#pwChange .field input{min-height:52px}
+
+@media(max-width:1050px){
+  .mgmt-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mgmt-workbench-grid{grid-template-columns:1fr}
+}
+
+@media(max-width:700px){
+  .mgmt-shell-head{align-items:stretch;flex-direction:column}
+  .mgmt-shell-head .btn{width:100%}
+  .mgmt-stat-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .mgmt-stat-card{min-height:125px;padding:18px}
+  .mgmt-stat-value{font-size:38px}
+  .mgmt-workbench-head{padding:20px}
+  .mgmt-search{grid-template-columns:1fr;padding:16px 20px}
+  .mgmt-search .btn{width:100%}
+  .mgmt-editor{padding:20px;min-height:210px}
+  .mgmt-security-strip{align-items:flex-start;flex-direction:column}
+}
+
+@media(max-width:460px){
+  .mgmt-stat-grid{grid-template-columns:1fr}
+  .mgmt-shell-head h2{font-size:42px}
+}
