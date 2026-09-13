@@ -11,7 +11,7 @@ const CX = {
 };
 
 function doGet() {
-  return json_({ ok: true, service: 'CREAIONX WORKSPACE API', version: '1.0.0', time: now_() });
+  return json_({ ok: true, service: 'CREAIONX WORKSPACE API', version: '1.1.0', time: now_() });
 }
 
 function doPost(e) {
@@ -25,12 +25,16 @@ function doPost(e) {
       submitPayment: () => submitPayment_(data),
       candidateFieldDecision: () => candidateFieldDecision_(data.candidateId, data.decision),
       getCandidate: () => getCandidatePublic_(data.candidateId),
+      getCandidateTraining: () => getCandidateTraining_(data.candidateId),
+      submitTraining: () => submitTraining_(data),
       getEmployee: () => getEmployeePublic_(data.employeeId),
       managerLogin: () => managerLogin_(data.managementId, data.password),
       managerLogout: () => managerLogout_(token),
       changeManagerPassword: () => changeManagerPassword_(token, data.newPassword),
       managerGetCandidate: () => managerGetCandidate_(token, data.candidateId),
       managerUpdateCandidate: () => managerUpdateCandidate_(token, data.candidateId, data.updates || {}),
+      managerGetTraining: () => managerGetTraining_(token, data.candidateId),
+      managerReviewTraining: () => managerReviewTraining_(token, data.recordId, data.status, data.score, data.feedback),
       managerGetEmployee: () => managerGetEmployee_(token, data.employeeId),
       managerUpdateEmployee: () => managerUpdateEmployee_(token, data.employeeId, data.updates || {}),
       hireCandidate: () => hireCandidate_(token, data.candidateId, data.employee || {}),
@@ -240,6 +244,15 @@ function managerUpdateCandidate_(token, candidateId, updates) {
   if (!found) throw new Error('Candidate ID not found.');
   const allowed = ['Payment Status','Application Status','Recommended Field','Field Decision','Training Progress %','Assessment Score','Hiring Status','Admin Notes'];
   const safe = filterKeys_(updates, allowed);
+
+  if (safe['Payment Status'] !== undefined) {
+    const paymentStatus = String(safe['Payment Status'] || '').trim().toUpperCase();
+    if (!['PENDING','UNDER_REVIEW','VERIFIED','REJECTED'].includes(paymentStatus)) throw new Error('Invalid payment status.');
+    if (!['SUPER_ADMIN','HR'].includes(String(manager['Role']).toUpperCase())) throw new Error('Only HR or Super Admin can change payment status.');
+    safe['Payment Status'] = paymentStatus;
+    syncLatestPaymentStatus_(candidateId, paymentStatus, manager['Management ID']);
+  }
+
   safe['Last Updated'] = now_();
   updateObjectRow_('Candidates', found.row, safe);
   audit_('MANAGEMENT', manager['Management ID'], 'CANDIDATE_UPDATED', 'Candidate', candidateId, '', JSON.stringify(safe), '');
@@ -322,8 +335,8 @@ function managerStats_(token) {
   const employees = sheetObjects_('Employees');
   return { ok:true, manager: managerPublic_(manager), stats: {
     candidates: candidates.length,
-    paymentPending: candidates.filter(x => x['Payment Status']==='PENDING').length,
-    inTraining: candidates.filter(x => String(x['Application Status']).includes('TRAIN') || Number(x['Training Progress %']||0) > 0 && Number(x['Training Progress %']||0) < 100).length,
+    paymentPending: candidates.filter(x => ['PENDING','UNDER_REVIEW'].includes(String(x['Payment Status']).toUpperCase())).length,
+    inTraining: candidates.filter(x => String(x['Application Status']).includes('TRAIN') || (Number(x['Training Progress %']||0) > 0 && Number(x['Training Progress %']||0) < 100)).length,
     hired: candidates.filter(x => x['Hiring Status']==='HIRED').length,
     employees: employees.filter(x => String(x['Employment Status']).toUpperCase() !== 'TERMINATED').length
   }};
@@ -340,8 +353,13 @@ function requireManager_(token, action) {
   const role = String(manager['Role']).toUpperCase();
   if (String(manager['Must Change Password']).toUpperCase()==='TRUE' && action !== 'CHANGE_PASSWORD') throw new Error('PASSWORD_CHANGE_REQUIRED');
   const rules = {
-    VIEW_CANDIDATE:['SUPER_ADMIN','HR','TRAINER'], UPDATE_CANDIDATE:['SUPER_ADMIN','HR','TRAINER'], HIRE_CANDIDATE:['SUPER_ADMIN','HR'],
-    VIEW_EMPLOYEE:['SUPER_ADMIN','HR','TRAINER','MANAGER','FINANCE'], UPDATE_EMPLOYEE:['SUPER_ADMIN','HR','TRAINER','MANAGER','FINANCE'], VIEW_STATS:['SUPER_ADMIN','HR','TRAINER','MANAGER','FINANCE'], CHANGE_PASSWORD:['SUPER_ADMIN','HR','TRAINER','MANAGER','FINANCE']
+    VIEW_CANDIDATE:['SUPER_ADMIN','HR','TRAINER'],
+    UPDATE_CANDIDATE:['SUPER_ADMIN','HR','TRAINER'],
+    HIRE_CANDIDATE:['SUPER_ADMIN','HR'],
+    VIEW_EMPLOYEE:['SUPER_ADMIN','HR','TRAINER','MANAGER','FINANCE'],
+    UPDATE_EMPLOYEE:['SUPER_ADMIN','HR','TRAINER','MANAGER','FINANCE'],
+    VIEW_STATS:['SUPER_ADMIN','HR','TRAINER','MANAGER','FINANCE'],
+    CHANGE_PASSWORD:['SUPER_ADMIN','HR','TRAINER','MANAGER','FINANCE']
   };
   if (rules[action] && !rules[action].includes(role)) throw new Error('Permission denied.');
   return manager;
@@ -356,6 +374,26 @@ function managerCanSeeEmployee_(manager, employee) {
 
 function managerPublic_(m) { return pick_(m,['Management ID','Department','Role','Access Scope','Must Change Password']); }
 function normalizeDept_(v){ return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+
+function syncLatestPaymentStatus_(candidateId, status, managerId) {
+  const s = sheet_('Payments');
+  if (s.getLastRow() < 2) return;
+  const h = headers_(s);
+  const candidateCol = h.indexOf('Candidate ID') + 1;
+  if (!candidateCol) return;
+  const matches = s.getRange(2, candidateCol, s.getLastRow()-1, 1).createTextFinder(candidateId).matchEntireCell(true).findAll();
+  if (!matches || !matches.length) return;
+  const row = matches[matches.length - 1].getRow();
+  const updates = { 'Status': status };
+  if (status === 'VERIFIED' || status === 'REJECTED') {
+    updates['Verified By'] = managerId;
+    updates['Verified At'] = now_();
+  } else {
+    updates['Verified By'] = '';
+    updates['Verified At'] = '';
+  }
+  updateObjectRow_('Payments', row, updates);
+}
 
 function saveBase64File_(folder, f) {
   const bytes = Utilities.base64Decode(String(f.dataBase64).replace(/^data:[^;]+;base64,/,''));
