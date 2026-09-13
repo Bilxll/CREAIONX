@@ -22,6 +22,8 @@ function doPost(e) {
     const token = body.token || '';
     const routes = {
       submitApplication: () => submitApplication_(data),
+      submitPayment: () => submitPayment_(data),
+      candidateFieldDecision: () => candidateFieldDecision_(data.candidateId, data.decision),
       getCandidate: () => getCandidatePublic_(data.candidateId),
       getEmployee: () => getEmployeePublic_(data.employeeId),
       managerLogin: () => managerLogin_(data.managementId, data.password),
@@ -95,6 +97,50 @@ function submitApplication_(d) {
   });
   audit_('CANDIDATE', candidateId, 'APPLICATION_SUBMITTED', 'Candidate', candidateId, '', 'SUBMITTED', '');
   return { ok: true, candidateId, track: isJunior ? 'CREAIONX JUNIOR' : 'CREAIONX WORKSPACE', paymentStatus: 'PENDING' };
+}
+
+function submitPayment_(d) {
+  const candidateId = normalizeId_(d.candidateId, 'CXW');
+  const found = findRow_('Candidates', 'Candidate ID', candidateId);
+  if (!found) throw new Error('Candidate ID not found.');
+  if (!d.method || !d.transactionId) throw new Error('Payment method and transaction ID are required.');
+  if (!d.proof || !d.proof.dataBase64) throw new Error('Payment proof is required.');
+
+  const root = DriveApp.getFolderById(CX.PAYMENT_PROOFS_FOLDER_ID);
+  const folders = root.getFoldersByName(candidateId);
+  const folder = folders.hasNext() ? folders.next() : root.createFolder(candidateId);
+  const proofFile = saveBase64File_(folder, d.proof);
+  const paymentId = 'PAY-' + Utilities.getUuid().slice(0,8).toUpperCase();
+  appendObject_('Payments', {
+    'Payment ID': paymentId,
+    'Candidate ID': candidateId,
+    'Submitted At': now_(),
+    'Method': d.method,
+    'Amount': 500,
+    'Transaction ID': d.transactionId,
+    'Proof URL': proofFile.getUrl(),
+    'Status': 'UNDER_REVIEW',
+    'Verified By': '',
+    'Verified At': '',
+    'Notes': ''
+  });
+  updateObjectRow_('Candidates', found.row, { 'Payment Status':'UNDER_REVIEW', 'Payment Proof URL':proofFile.getUrl(), 'Last Updated':now_() });
+  audit_('CANDIDATE', candidateId, 'PAYMENT_SUBMITTED', 'Payment', paymentId, '', 'UNDER_REVIEW', '');
+  return { ok:true, paymentId, status:'UNDER_REVIEW' };
+}
+
+function candidateFieldDecision_(candidateId, decision) {
+  candidateId = normalizeId_(candidateId, 'CXW');
+  decision = String(decision || '').trim().toUpperCase();
+  if (!['ACCEPTED','DECLINED'].includes(decision)) throw new Error('Invalid field decision.');
+  const found = findRow_('Candidates', 'Candidate ID', candidateId);
+  if (!found) throw new Error('Candidate ID not found.');
+  if (!String(found.object['Recommended Field'] || '').trim()) throw new Error('No field has been offered yet.');
+  if (String(found.object['Field Decision'] || '').toUpperCase() !== 'PENDING') throw new Error('A field decision has already been recorded.');
+  const applicationStatus = decision === 'ACCEPTED' ? 'FIELD_ACCEPTED' : 'FIELD_DECLINED';
+  updateObjectRow_('Candidates', found.row, { 'Field Decision':decision, 'Application Status':applicationStatus, 'Last Updated':now_() });
+  audit_('CANDIDATE', candidateId, 'FIELD_' + decision, 'Candidate', candidateId, 'PENDING', decision, '');
+  return { ok:true, decision, applicationStatus };
 }
 
 function getCandidatePublic_(candidateId) {
