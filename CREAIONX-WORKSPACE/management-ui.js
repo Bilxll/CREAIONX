@@ -38,7 +38,7 @@
     document.getElementById('mgmtLogout').onclick = async () => {
       const button = document.getElementById('mgmtLogout');
       setBusy(button, true, 'Signing out…');
-      try { await api('managerLogout', {}, sessionStorage.getItem('cxmToken')); }
+      try { await api('managerLogout', {}, sessionStorage.getItemById?.('cxmToken') || sessionStorage.getItem('cxmToken')); }
       catch {}
       sessionStorage.removeItem('cxmToken');
       sessionStorage.removeItem('cxmInfo');
@@ -124,8 +124,8 @@
 
     const candidateForm = document.getElementById('mgmtCandidateSearch');
     const employeeForm = document.getElementById('mgmtEmployeeSearch');
-    if (candidateForm) candidateForm.onsubmit = window.loadCandidateEditor;
-    if (employeeForm) employeeForm.onsubmit = window.loadEmployeeEditor;
+    if (candidateForm) candidateForm.onsubmit = event => window.loadCandidateEditor(event);
+    if (employeeForm) employeeForm.onsubmit = event => window.loadEmployeeEditor(event);
   };
 
   // app.js may restore an existing CXM session before this polish layer loads.
@@ -135,8 +135,8 @@
   const info = getManagerInfo();
   if (token && info?.['Management ID']) {
     window.renderManagementShell(info);
-    Promise.resolve().then(() => {
+    setTimeout(() => {
       if (typeof window.loadManagementStats === 'function') window.loadManagementStats();
-    });
+    }, 0);
   }
 })();
