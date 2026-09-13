@@ -2,6 +2,88 @@ window.CX_CONFIG = {
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxWZLpE9APX0G9K1YPSFknwt_uHuuWaRQB96I28x3wlSTaAv6qb6vV6Go7iOyeeDWffTA/exec"
 };
 
+// Global CREAIONX dropdown theme.
+(() => {
+  const style = document.createElement('style');
+  style.id = 'cx-dropdown-theme';
+  style.textContent = `
+    select {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      min-height: 50px;
+      padding: 13px 48px 13px 16px !important;
+      border: 1px solid rgba(255,255,255,.12) !important;
+      border-radius: 14px !important;
+      background-color: rgba(255,255,255,.035) !important;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #ccff00 50%),
+        linear-gradient(135deg, #ccff00 50%, transparent 50%),
+        linear-gradient(to right, rgba(255,255,255,.08), rgba(255,255,255,.08));
+      background-position:
+        calc(100% - 20px) calc(50% - 2px),
+        calc(100% - 15px) calc(50% - 2px),
+        calc(100% - 42px) 50%;
+      background-size: 5px 5px, 5px 5px, 1px 24px;
+      background-repeat: no-repeat;
+      color: var(--text, #ebebeb) !important;
+      font-family: 'Space Grotesk', sans-serif !important;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.3;
+      outline: none;
+      cursor: pointer;
+      color-scheme: dark;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
+      transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+
+    select:hover {
+      border-color: rgba(204,255,0,.34) !important;
+      background-color: rgba(204,255,0,.035) !important;
+    }
+
+    select:focus,
+    select:focus-visible {
+      border-color: #ccff00 !important;
+      background-color: rgba(204,255,0,.045) !important;
+      box-shadow: 0 0 0 4px rgba(204,255,0,.07), 0 0 28px rgba(204,255,0,.08) !important;
+    }
+
+    select:disabled {
+      opacity: .48;
+      cursor: not-allowed;
+    }
+
+    select option,
+    select optgroup {
+      background: #0c0c0c;
+      color: #ebebeb;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 14px;
+    }
+
+    select option:checked {
+      background: #ccff00;
+      color: #000;
+    }
+
+    .field select {
+      display: block;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 640px) {
+      select {
+        min-height: 48px;
+        padding-left: 14px !important;
+        font-size: 16px;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
 // Apply-page submission controller.
 // This runs before app.js and owns application submission completely so a
 // successful application always becomes a dedicated confirmation screen.
