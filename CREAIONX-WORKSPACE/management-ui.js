@@ -38,7 +38,7 @@
     document.getElementById('mgmtLogout').onclick = async () => {
       const button = document.getElementById('mgmtLogout');
       setBusy(button, true, 'Signing out…');
-      try { await api('managerLogout', {}, sessionStorage.getItemById?.('cxmToken') || sessionStorage.getItem('cxmToken')); }
+      try { await api('managerLogout', {}, sessionStorage.getItem('cxmToken')); }
       catch {}
       sessionStorage.removeItem('cxmToken');
       sessionStorage.removeItem('cxmInfo');
