@@ -2,86 +2,359 @@ window.CX_CONFIG = {
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxWZLpE9APX0G9K1YPSFknwt_uHuuWaRQB96I28x3wlSTaAv6qb6vV6Go7iOyeeDWffTA/exec"
 };
 
-// Global CREAIONX dropdown theme.
+// Global CREAIONX custom dropdown system.
+// Native selects remain in the DOM for form submission/backend compatibility,
+// while the visible opened menu is fully rendered in the site theme.
 (() => {
   const style = document.createElement('style');
-  style.id = 'cx-dropdown-theme';
+  style.id = 'cx-custom-dropdown-theme';
   style.textContent = `
-    select {
-      appearance: none;
-      -webkit-appearance: none;
+    .cx-select {
+      position: relative;
+      width: 100%;
+      margin-top: 8px;
+      isolation: isolate;
+    }
+
+    .cx-native-select {
+      position: absolute !important;
+      inset: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      z-index: -1 !important;
+    }
+
+    .cx-select-trigger {
       width: 100%;
       min-height: 50px;
-      padding: 13px 48px 13px 16px !important;
-      border: 1px solid rgba(255,255,255,.12) !important;
-      border-radius: 14px !important;
-      background-color: rgba(255,255,255,.035) !important;
-      background-image:
-        linear-gradient(45deg, transparent 50%, #ccff00 50%),
-        linear-gradient(135deg, #ccff00 50%, transparent 50%),
-        linear-gradient(to right, rgba(255,255,255,.08), rgba(255,255,255,.08));
-      background-position:
-        calc(100% - 20px) calc(50% - 2px),
-        calc(100% - 15px) calc(50% - 2px),
-        calc(100% - 42px) 50%;
-      background-size: 5px 5px, 5px 5px, 1px 24px;
-      background-repeat: no-repeat;
-      color: var(--text, #ebebeb) !important;
-      font-family: 'Space Grotesk', sans-serif !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 13px 15px 13px 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      background: rgba(255,255,255,.035);
+      color: var(--text, #ebebeb);
+      font-family: 'Space Grotesk', sans-serif;
       font-size: 14px;
       font-weight: 500;
       line-height: 1.3;
-      outline: none;
+      text-align: left;
       cursor: pointer;
-      color-scheme: dark;
+      outline: none;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.02);
-      transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease, transform .2s ease;
+      transition: border-color .2s ease, background .2s ease, box-shadow .2s ease, transform .2s ease;
     }
 
-    select:hover {
-      border-color: rgba(204,255,0,.34) !important;
-      background-color: rgba(204,255,0,.035) !important;
+    .cx-select-trigger:hover {
+      border-color: rgba(204,255,0,.38);
+      background: rgba(204,255,0,.035);
     }
 
-    select:focus,
-    select:focus-visible {
-      border-color: #ccff00 !important;
-      background-color: rgba(204,255,0,.045) !important;
-      box-shadow: 0 0 0 4px rgba(204,255,0,.07), 0 0 28px rgba(204,255,0,.08) !important;
+    .cx-select.open .cx-select-trigger,
+    .cx-select-trigger:focus-visible {
+      border-color: #ccff00;
+      background: rgba(204,255,0,.045);
+      box-shadow: 0 0 0 4px rgba(204,255,0,.07), 0 0 30px rgba(204,255,0,.08);
     }
 
-    select:disabled {
-      opacity: .48;
-      cursor: not-allowed;
+    .cx-select-trigger.is-placeholder .cx-select-value {
+      color: rgba(235,235,235,.48);
     }
 
-    select option,
-    select optgroup {
-      background: #0c0c0c;
-      color: #ebebeb;
+    .cx-select-chevron {
+      width: 29px;
+      height: 29px;
+      flex: 0 0 29px;
+      display: grid;
+      place-items: center;
+      border-left: 1px solid rgba(255,255,255,.08);
+      color: #ccff00;
+      padding-left: 12px;
+      margin-left: auto;
+    }
+
+    .cx-select-chevron::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-right: 2px solid currentColor;
+      border-bottom: 2px solid currentColor;
+      transform: rotate(45deg) translate(-1px,-1px);
+      transition: transform .2s ease;
+    }
+
+    .cx-select.open .cx-select-chevron::before {
+      transform: rotate(225deg) translate(-1px,-1px);
+    }
+
+    .cx-select-menu {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: calc(100% + 8px);
+      z-index: 10000;
+      display: none;
+      max-height: 290px;
+      overflow-y: auto;
+      padding: 7px;
+      border: 1px solid rgba(204,255,0,.28);
+      border-radius: 16px;
+      background: rgba(8,8,8,.98);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 24px 70px rgba(0,0,0,.72), 0 0 0 1px rgba(255,255,255,.025) inset, 0 0 34px rgba(204,255,0,.055);
+      transform-origin: top center;
+      animation: cxSelectIn .16s ease-out;
+    }
+
+    .cx-select.open .cx-select-menu {
+      display: block;
+    }
+
+    .cx-select-option {
+      width: 100%;
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 12px;
+      margin: 1px 0;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: rgba(235,235,235,.78);
       font-family: 'Space Grotesk', sans-serif;
       font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background .14s ease, color .14s ease, border-color .14s ease, transform .14s ease;
     }
 
-    select option:checked {
+    .cx-select-option:hover,
+    .cx-select-option.keyboard-active {
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.07);
+      color: #fff;
+      transform: translateX(2px);
+    }
+
+    .cx-select-option.selected {
       background: #ccff00;
+      border-color: #ccff00;
       color: #000;
+      font-weight: 700;
     }
 
-    .field select {
-      display: block;
-      margin-top: 8px;
+    .cx-select-option.selected::after {
+      content: '✓';
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .cx-select-option:disabled {
+      opacity: .34;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .cx-select-group {
+      padding: 10px 12px 5px;
+      color: rgba(204,255,0,.62);
+      font: 600 9px 'JetBrains Mono', monospace;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .cx-select-menu::-webkit-scrollbar { width: 8px; }
+    .cx-select-menu::-webkit-scrollbar-track { background: transparent; }
+    .cx-select-menu::-webkit-scrollbar-thumb {
+      background: rgba(204,255,0,.22);
+      border: 2px solid #080808;
+      border-radius: 99px;
+    }
+    .cx-select-menu::-webkit-scrollbar-thumb:hover { background: rgba(204,255,0,.42); }
+    .cx-select-menu { scrollbar-width: thin; scrollbar-color: rgba(204,255,0,.28) transparent; }
+
+    .cx-select.disabled { opacity: .48; }
+    .cx-select.disabled .cx-select-trigger { cursor: not-allowed; }
+
+    @keyframes cxSelectIn {
+      from { opacity: 0; transform: translateY(-5px) scale(.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     @media (max-width: 640px) {
-      select {
-        min-height: 48px;
-        padding-left: 14px !important;
-        font-size: 16px;
-      }
+      .cx-select-trigger { min-height: 48px; font-size: 16px; padding-left: 14px; }
+      .cx-select-option { min-height: 46px; font-size: 15px; }
+      .cx-select-menu { max-height: 260px; }
     }
   `;
   document.head.appendChild(style);
+
+  const closeAll = except => {
+    document.querySelectorAll('.cx-select.open').forEach(wrapper => {
+      if (wrapper !== except) {
+        wrapper.classList.remove('open');
+        wrapper.querySelector('.cx-select-trigger')?.setAttribute('aria-expanded', 'false');
+      }
+    });
+  };
+
+  function enhanceSelect(select) {
+    if (!select || select.dataset.cxEnhanced === 'true') return;
+    select.dataset.cxEnhanced = 'true';
+    select.classList.add('cx-native-select');
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cx-select';
+    if (select.disabled) wrapper.classList.add('disabled');
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'cx-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const value = document.createElement('span');
+    value.className = 'cx-select-value';
+    const chevron = document.createElement('span');
+    chevron.className = 'cx-select-chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+    trigger.append(value, chevron);
+
+    const menu = document.createElement('div');
+    menu.className = 'cx-select-menu';
+    menu.setAttribute('role', 'listbox');
+    menu.tabIndex = -1;
+
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.append(select, trigger, menu);
+
+    let keyboardIndex = -1;
+
+    const optionNodes = () => [...menu.querySelectorAll('.cx-select-option:not(:disabled)')];
+
+    const renderOptions = () => {
+      menu.innerHTML = '';
+      [...select.children].forEach(child => {
+        if (child.tagName === 'OPTGROUP') {
+          const group = document.createElement('div');
+          group.className = 'cx-select-group';
+          group.textContent = child.label;
+          menu.appendChild(group);
+          [...child.children].forEach(option => addOption(option));
+        } else if (child.tagName === 'OPTION') {
+          addOption(child);
+        }
+      });
+      syncFromNative();
+    };
+
+    const addOption = option => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'cx-select-option';
+      item.setAttribute('role', 'option');
+      item.dataset.value = option.value;
+      item.textContent = option.textContent;
+      item.disabled = option.disabled;
+      item.addEventListener('click', () => {
+        if (option.disabled) return;
+        select.value = option.value;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        syncFromNative();
+        closeAll();
+        trigger.focus();
+      });
+      menu.appendChild(item);
+    };
+
+    const syncFromNative = () => {
+      const chosen = select.options[select.selectedIndex];
+      value.textContent = chosen ? chosen.textContent : 'Select';
+      trigger.classList.toggle('is-placeholder', !chosen || chosen.value === '');
+      trigger.disabled = select.disabled;
+      wrapper.classList.toggle('disabled', select.disabled);
+      [...menu.querySelectorAll('.cx-select-option')].forEach(item => {
+        const active = item.dataset.value === select.value;
+        item.classList.toggle('selected', active);
+        item.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+    };
+
+    const openMenu = () => {
+      if (select.disabled) return;
+      const willOpen = !wrapper.classList.contains('open');
+      closeAll(wrapper);
+      wrapper.classList.toggle('open', willOpen);
+      trigger.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+      if (willOpen) {
+        const nodes = optionNodes();
+        keyboardIndex = Math.max(0, nodes.findIndex(node => node.dataset.value === select.value));
+        setKeyboardActive(nodes);
+        menu.querySelector('.selected')?.scrollIntoView({ block: 'nearest' });
+      }
+    };
+
+    const setKeyboardActive = nodes => {
+      nodes.forEach((node, i) => node.classList.toggle('keyboard-active', i === keyboardIndex));
+      nodes[keyboardIndex]?.scrollIntoView({ block: 'nearest' });
+    };
+
+    trigger.addEventListener('click', openMenu);
+    trigger.addEventListener('keydown', event => {
+      const nodes = optionNodes();
+      if (!nodes.length) return;
+
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (!wrapper.classList.contains('open')) openMenu();
+        keyboardIndex = event.key === 'ArrowDown'
+          ? Math.min(nodes.length - 1, keyboardIndex + 1)
+          : Math.max(0, keyboardIndex - 1);
+        setKeyboardActive(nodes);
+      } else if ((event.key === 'Enter' || event.key === ' ') && wrapper.classList.contains('open')) {
+        event.preventDefault();
+        nodes[keyboardIndex]?.click();
+      } else if (event.key === 'Escape') {
+        closeAll();
+      }
+    });
+
+    select.addEventListener('change', syncFromNative);
+    renderOptions();
+
+    const nativeObserver = new MutationObserver(renderOptions);
+    nativeObserver.observe(select, { childList: true, subtree: true, attributes: true });
+  }
+
+  const enhanceAll = root => {
+    if (root?.matches?.('select')) enhanceSelect(root);
+    root?.querySelectorAll?.('select').forEach(enhanceSelect);
+  };
+
+  enhanceAll(document);
+
+  const observer = new MutationObserver(mutations => {
+    mutations.forEach(mutation => mutation.addedNodes.forEach(node => {
+      if (node.nodeType === 1) enhanceAll(node);
+    }));
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  document.addEventListener('click', event => {
+    if (!event.target.closest('.cx-select')) closeAll();
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeAll();
+  });
 })();
 
 // Apply-page submission controller.
