@@ -6,7 +6,9 @@
 .home-nav-toggle[aria-expanded="true"] span:nth-child(2){opacity:0}
 .home-nav-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-3px) rotate(-45deg)}
 
-.hero-copy{position:relative;z-index:2}
+.hero-copy{position:relative;z-index:2;min-width:0}
+.hero h1{max-width:100%;padding-right:.08em}
+.hero h1 .accent{overflow-wrap:normal;word-break:normal}
 .hero-trust{display:flex;flex-wrap:wrap;gap:9px;margin-top:28px}
 .hero-trust span{display:inline-flex;align-items:center;gap:7px;padding:8px 11px;border-radius:999px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.03);color:var(--muted);font:500 9px 'JetBrains Mono',monospace;letter-spacing:.09em;text-transform:uppercase}
 .hero-trust i{width:5px;height:5px;border-radius:50%;background:var(--lime);box-shadow:0 0 12px rgba(204,255,0,.65)}
@@ -37,7 +39,7 @@
   .nav-pills{display:none}
   .nav-right{gap:12px}
   .hero{grid-template-columns:1fr 1fr;padding:60px 44px 86px;gap:38px}
-  .hero h1{font-size:clamp(64px,8vw,98px)}
+  .hero h1{font-size:clamp(60px,7.2vw,90px)}
   .section,.light-section,.portal-cta{padding-left:44px;padding-right:44px}
   .bento{grid-template-columns:repeat(2,1fr)}
   .bento-card.large,.bento-card.wide{grid-column:span 2}
@@ -59,7 +61,7 @@
   .nav.nav-open .nav-pills,.nav.nav-open .home-nav-toggle,.nav.nav-open .brand{z-index:41}
 
   .hero{min-height:auto;grid-template-columns:1fr;padding:62px 24px 70px;gap:54px}
-  .hero h1{font-size:clamp(58px,15vw,86px);line-height:.88;margin-bottom:24px}
+  .hero h1{font-size:clamp(50px,11vw,72px);line-height:.9;letter-spacing:-.065em;margin-bottom:24px;padding-right:.14em}
   .hero p{font-size:17px;line-height:1.6}
   .hero-actions{display:grid;grid-template-columns:1fr 1fr}
   .hero-actions .btn{width:100%}
@@ -90,7 +92,7 @@
 @media(max-width:540px){
   .brand span{max-width:150px;line-height:1.2}
   .hero{padding-top:46px}
-  .hero h1{font-size:clamp(52px,16vw,72px)}
+  .hero h1{font-size:clamp(42px,12.5vw,58px);line-height:.92;padding-right:.16em}
   .hero p{font-size:16px}
   .hero-actions{grid-template-columns:1fr}
   .hero-trust{gap:7px}
